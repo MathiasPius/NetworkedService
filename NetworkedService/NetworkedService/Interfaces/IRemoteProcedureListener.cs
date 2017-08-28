@@ -10,5 +10,6 @@ namespace NetworkedService.Interfaces
     {
         RemoteCommand Receive();
         void Reply(RemoteResult remoteResult);
+        ICommandDeserializer GetSerializer();
     }
 }

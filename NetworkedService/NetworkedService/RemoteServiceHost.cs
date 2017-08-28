@@ -85,11 +85,12 @@ namespace NetworkedService
 
                     // Convert the parameters from the RemoteCommand into correct types
                     var parameterTypes = method.GetParameters()
-                        .Select(p => p.ParameterType);
-
-                    var parameters = remoteCommand.Parameters
-                        .Zip(parameterTypes, (o, t) => Convert.ChangeType(o, t))
+                        .Select(p => p.ParameterType)
                         .ToArray();
+
+                    var parameters = _remoteProcedureListener
+                        .GetSerializer()
+                        .ConvertParameters(remoteCommand.Parameters, parameterTypes);
 
                     // Make the call
                     Console.WriteLine("Server: Calling " + remoteCommand.InterfaceName + "::" + remoteCommand.MethodName);

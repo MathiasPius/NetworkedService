@@ -8,5 +8,6 @@ namespace NetworkedService.Interfaces
     public interface IRemoteProcedureCaller
     {
         RemoteResult CallMethod(RemoteCommand remoteCommand);
+        ICommandSerializer GetSerializer();
     }
 }

@@ -53,5 +53,10 @@ namespace NetworkedService.Transport.NetMQ
                 }
             });
         }
+
+        public ICommandSerializer GetSerializer()
+        {
+            return _commandSerializer;
+        }
     }
 }

@@ -33,5 +33,10 @@ namespace NetworkedService.Transport.NetMQ
         {
             _responseSocket.SendFrame(_commandDeserializer.SerializeResult(remoteResult));
         }
+
+        public ICommandDeserializer GetSerializer()
+        {
+            return _commandDeserializer;
+        }
     }
 }

@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 
 using NetworkedService.Interfaces;
 using NetworkedService.Models;
+using System;
+using Newtonsoft.Json.Linq;
 
 namespace NetworkedService.Serialization.Json
 {
@@ -17,6 +19,11 @@ namespace NetworkedService.Serialization.Json
         public RemoteResult DeserializeResult(byte[] remoteResult)
         {
             return JsonConvert.DeserializeObject<RemoteResult>(Encoding.UTF8.GetString(remoteResult));
+        }
+
+        public object ConvertResult(object result, Type resultType)
+        {
+            return ((JToken)result).ToObject(resultType);
         }
     }
 }

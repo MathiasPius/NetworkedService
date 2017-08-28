@@ -9,5 +9,6 @@ namespace NetworkedService.Interfaces
     {
         byte[] SerializeCommand(RemoteCommand remoteCommand);
         RemoteResult DeserializeResult(byte[] remoteResult);
+        object ConvertResult(object result, Type resultType);
     }
 }

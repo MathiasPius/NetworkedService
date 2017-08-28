@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using NetworkedService.Interfaces;
 using NetworkedService.Models;
+using System.ComponentModel;
 
 namespace NetworkedService
 {
@@ -18,7 +19,7 @@ namespace NetworkedService
             _remoteSessionInformation = new RemoteSessionInformation
             {
                 InstanceId = InstanceId,
-                ScopeId =  scope.GetScopeGuid(),
+                ScopeId =  scope?.GetScopeGuid() ?? Guid.Empty,
                 ActionId = Guid.Empty
             };
 
@@ -65,9 +66,13 @@ namespace NetworkedService
             };
 
             var result = _remoteProcedureCaller.CallMethod(remoteCommand);
-            result.Result = Convert.ChangeType(result.Result, typeof(TReturn));
 
-            return (TReturn)result.Result;
+            return (TReturn)_remoteProcedureCaller.GetSerializer()
+                .ConvertResult(result.Result, typeof(TReturn));
+            //var converter = TypeDescriptor.GetConverter(typeof(TReturn));
+            //result.Result = (TReturn)result.Result;// Convert.ChangeType(result.Result, typeof(TReturn));
+
+            //return (TReturn)result.Result;
         }
 
         public void ScopeDestroyed(INetworkedScope networkedScope)
