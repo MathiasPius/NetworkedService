@@ -69,10 +69,6 @@ namespace NetworkedService
 
             return (TReturn)_remoteProcedureCaller.GetSerializer()
                 .ConvertResult(result.Result, typeof(TReturn));
-            //var converter = TypeDescriptor.GetConverter(typeof(TReturn));
-            //result.Result = (TReturn)result.Result;// Convert.ChangeType(result.Result, typeof(TReturn));
-
-            //return (TReturn)result.Result;
         }
 
         public void ScopeDestroyed(INetworkedScope networkedScope)

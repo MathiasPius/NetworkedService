@@ -23,7 +23,12 @@ namespace NetworkedService.Serialization.Json
 
         public object ConvertResult(object result, Type resultType)
         {
-            return ((JToken)result).ToObject(resultType);
+            if(result is JToken)
+            {
+                return ((JToken)result).ToObject(resultType);
+            }
+            
+            return result;
         }
     }
 }

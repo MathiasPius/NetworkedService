@@ -15,7 +15,14 @@ namespace NetworkedService.Serialization.Json
         public object[] ConvertParameters(object[] parameters, Type[] parameterTypes)
         {
             return parameters
-                .Zip(parameterTypes, (p, t) => ((JObject)p).ToObject(t))
+                .Zip(parameterTypes, (p, t) => {
+                    if (p is JToken)
+                    {
+                        return ((JToken)p).ToObject(t);
+                    }
+                    
+                    return p;
+                })
                 .ToArray();
         }
 
