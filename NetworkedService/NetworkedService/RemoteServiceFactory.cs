@@ -11,12 +11,14 @@ namespace NetworkedService
 {
     public class RemoteServiceFactory<TInterface>
     {
-        public static Func<IServiceProvider, TInterface> Factory(IRemoteProcedureCaller remoteProcedureCaller)
+
+
+        public static Func<IServiceProvider, TInterface> Factory(IRemoteProcedureCaller remoteProcedureCaller, string interfaceName)
         {
             return (IServiceProvider serviceProvider) =>
             {
                 var scope = serviceProvider.GetService<INetworkedScope>();
-                var instance = Activator.CreateInstance(CachedInterfaceWrapper.CachedType, scope, remoteProcedureCaller);
+                var instance = Activator.CreateInstance(CachedInterfaceWrapper.CachedType, scope, remoteProcedureCaller, interfaceName);
 
                 if (scope != null)
                     scope.AddClient((IRemoteService)instance);
@@ -25,13 +27,23 @@ namespace NetworkedService
             };
         }
 
-        public static Func<IServiceProvider, TInterface> Factory(Func<IServiceProvider, IRemoteProcedureCaller> rpcFactory)
+        public static Func<IServiceProvider, TInterface> Factory(IRemoteProcedureCaller remoteProcedureCaller)
+        {
+            return Factory(remoteProcedureCaller, typeof(TInterface).Name);
+        }
+
+        public static Func<IServiceProvider, object> Factory(Func<IServiceProvider, IRemoteProcedureCaller> rpcFactory, string interfaceName)
         {
             return (IServiceProvider serviceProvider) =>
             {
                 // Construct the IRPC from its own factory first, then call the TInterface constructor with the IRPC
-                return Factory(rpcFactory(serviceProvider))(serviceProvider);
+                return Factory(rpcFactory(serviceProvider), interfaceName)(serviceProvider);
             };
+        }
+
+        public static Func<IServiceProvider, object> Factory(Func<IServiceProvider, IRemoteProcedureCaller> rpcFactory)
+        {
+            return Factory(rpcFactory, typeof(TInterface).Name);
         }
 
         private static class CachedInterfaceWrapper
@@ -69,15 +81,16 @@ namespace NetworkedService
                 var constructorBuilder = typeBuilder.DefineConstructor(
                     MethodAttributes.Public | MethodAttributes.HideBySig,
                     CallingConventions.Standard,
-                    new Type[] { typeof(INetworkedScope), typeof(IRemoteProcedureCaller) }
+                    new Type[] { typeof(INetworkedScope), typeof(IRemoteProcedureCaller), typeof(string) }
                 );
 
                 constructorBuilder.DefineParameter(1, ParameterAttributes.None, "scope");
                 constructorBuilder.DefineParameter(2, ParameterAttributes.None, "remoteProcedureCaller");
+                constructorBuilder.DefineParameter(3, ParameterAttributes.None, "interfaceName");
 
                 var baseConstructor = baseType.GetConstructor(
                     BindingFlags.Public | BindingFlags.Instance, null,
-                    new Type[] { typeof(INetworkedScope), typeof(IRemoteProcedureCaller) }, null
+                    new Type[] { typeof(INetworkedScope), typeof(IRemoteProcedureCaller), typeof(string) }, null
                 );
 
                 // Tell our constructor to call the RemoteService<TInterface> constructor
@@ -85,6 +98,7 @@ namespace NetworkedService
                 constructor.Emit(OpCodes.Ldarg_0);
                 constructor.Emit(OpCodes.Ldarg_1);
                 constructor.Emit(OpCodes.Ldarg_2);
+                constructor.Emit(OpCodes.Ldarg_3);
                 constructor.Emit(OpCodes.Call, baseConstructor);
                 constructor.Emit(OpCodes.Nop);
                 constructor.Emit(OpCodes.Nop);

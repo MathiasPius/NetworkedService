@@ -7,6 +7,7 @@ namespace NetworkedService.Transport.NetMQ
 {
     public static class ServiceExtensions
     {
+
         public static void AddNetMQClient<TInterface>(this IServiceCollection serviceCollection, string endpoint, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
             where TInterface: class
         {

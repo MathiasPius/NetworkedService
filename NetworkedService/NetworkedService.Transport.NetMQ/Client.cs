@@ -13,19 +13,27 @@ namespace NetworkedService.Transport.NetMQ
 {
     public class Client : IRemoteProcedureCaller
     {
-        private readonly RequestSocket _requestSocket;
+        private readonly Guid _identity = Guid.NewGuid();
+        private readonly DealerSocket _requestSocket;
         private readonly ICommandSerializer _commandSerializer;
 
         public Client(string endpoint, ICommandSerializer commandSerializer)
         {
-            _requestSocket = new RequestSocket(endpoint);
+            _requestSocket = new DealerSocket(endpoint);
+            _requestSocket.Options.Identity = _identity.ToByteArray();
             _commandSerializer = commandSerializer;
         }
 
         public RemoteResult CallMethod(RemoteCommand remoteCommand)
         {
-            _requestSocket.SendFrame(_commandSerializer.SerializeCommand(remoteCommand));
-            return _commandSerializer.DeserializeResult(_requestSocket.ReceiveFrameBytes());
+            var msg = new NetMQMessage();
+            msg.Append(_commandSerializer.SerializeCommand(remoteCommand));
+
+            _requestSocket.SendMultipartMessage(msg);
+
+            var reply = _requestSocket.ReceiveMultipartMessage(1);
+            
+            return _commandSerializer.DeserializeResult(reply[0].ToByteArray());
         }
 
         public static Func<IServiceProvider, Client> Factory(string endpoint)

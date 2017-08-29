@@ -9,29 +9,43 @@ using NetworkedService.Models;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 
 namespace NetworkedService.Transport.NetMQ
 {
     public class Server : IRemoteProcedureListener
     {
         private readonly ICommandDeserializer _commandDeserializer;
-        private readonly ResponseSocket _responseSocket;
+        private readonly RouterSocket _responseSocket;
+        private readonly ConcurrentDictionary<RemoteSessionInformation, NetMQFrame> _activeSessions;
 
         public Server(string endpoint, ICommandDeserializer commandDeserializer)
         {
             _commandDeserializer = commandDeserializer;
-            _responseSocket = new ResponseSocket(endpoint);
+            _responseSocket = new RouterSocket(endpoint);
+            _activeSessions = new ConcurrentDictionary<RemoteSessionInformation, NetMQFrame>();
         }
 
         public RemoteCommand Receive()
         {
-            var data = _responseSocket.ReceiveFrameBytes();
-            return _commandDeserializer.DeserializeCommand(data);
+            var msg = _responseSocket.ReceiveMultipartMessage();
+            var command = _commandDeserializer.DeserializeCommand(msg[1].Buffer);
+
+            _activeSessions[command.RemoteSessionInformation] = msg[0];
+
+            return command;
         }
 
         public void Reply(RemoteResult remoteResult)
         {
-            _responseSocket.SendFrame(_commandDeserializer.SerializeResult(remoteResult));
+            NetMQFrame ident;
+            _activeSessions.Remove(remoteResult.RemoteSessionInformation, out ident);
+
+            var reply = new NetMQMessage(2);
+            reply.Append(ident);
+            reply.Append(_commandDeserializer.SerializeResult(remoteResult));
+
+            _responseSocket.SendMultipartMessage(reply);
         }
 
         public ICommandDeserializer GetSerializer()

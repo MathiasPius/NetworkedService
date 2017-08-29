@@ -13,8 +13,9 @@ namespace NetworkedService
         private static Guid InstanceId = Guid.NewGuid();
         private readonly IRemoteProcedureCaller _remoteProcedureCaller;
         private readonly RemoteSessionInformation _remoteSessionInformation;
+        private readonly string _interfaceName;
 
-        public RemoteService(INetworkedScope scope, IRemoteProcedureCaller remoteProcedurePoller)
+        public RemoteService(INetworkedScope scope, IRemoteProcedureCaller remoteProcedurePoller, string interfaceName)
         {
             _remoteSessionInformation = new RemoteSessionInformation
             {
@@ -24,6 +25,7 @@ namespace NetworkedService
             };
 
             _remoteProcedureCaller = remoteProcedurePoller;
+            _interfaceName = interfaceName;
         }
 
         public void CallVoidMethod(string methodName, params object[] parameters)
@@ -39,7 +41,7 @@ namespace NetworkedService
                     ScopeId = _remoteSessionInformation.ScopeId,
                     ActionId = Guid.NewGuid()
                 },
-                InterfaceName = typeof(TInterface).Name,
+                InterfaceName = _interfaceName,
                 MethodName = methodName,
                 Parameters = parameters
             };
@@ -60,7 +62,7 @@ namespace NetworkedService
                     ScopeId = _remoteSessionInformation.ScopeId,
                     ActionId = Guid.NewGuid()
                 },
-                InterfaceName = typeof(TInterface).Name,
+                InterfaceName = _interfaceName,
                 MethodName = methodName,
                 Parameters = parameters
             };
@@ -86,6 +88,11 @@ namespace NetworkedService
                     ScopeId = networkedScope.GetScopeGuid(),
                 }
             });
+        }
+
+        public string GetInterfaceName()
+        {
+            return _interfaceName;
         }
     }
 }

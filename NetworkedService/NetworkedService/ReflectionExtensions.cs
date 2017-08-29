@@ -41,7 +41,7 @@ namespace NetworkedService
                 .Where(m => m != null)
                 .ToList();
 
-            return methods.Single();
+            return methods.First();
         }
     }
 }
