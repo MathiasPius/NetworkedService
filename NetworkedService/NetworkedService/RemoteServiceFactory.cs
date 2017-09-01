@@ -6,6 +6,7 @@ using NetworkedService.Interfaces;
 using System.Reflection.Emit;
 using System.Reflection;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace NetworkedService
 {
@@ -124,6 +125,9 @@ namespace NetworkedService
                 MethodInfo callMethod;
                 if (methodInfo.ReturnType == typeof(void))
                     callMethod = baseType.GetMethod("CallVoidMethod", new Type[] { typeof(string), typeof(object[]) });
+                else if (methodInfo.ReturnType.IsGenericType && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                    callMethod = baseType.GetMethod("CallAsyncMethod", new Type[] { typeof(string), typeof(object[]) })
+                        .MakeGenericMethod(methodInfo.ReturnType.GetGenericArguments()[0]);
                 else
                     callMethod = baseType.GetMethod("CallMethod", new Type[] { typeof(string), typeof(object[]) })
                         .MakeGenericMethod(methodInfo.ReturnType);

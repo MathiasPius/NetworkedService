@@ -27,13 +27,21 @@ namespace NetworkedService.Transport.NetMQ
         public RemoteResult CallMethod(RemoteCommand remoteCommand)
         {
             var msg = new NetMQMessage();
+            msg.AppendEmptyFrame();
             msg.Append(_commandSerializer.SerializeCommand(remoteCommand));
 
             _requestSocket.SendMultipartMessage(msg);
 
-            var reply = _requestSocket.ReceiveMultipartMessage(1);
+            var reply = _requestSocket.ReceiveMultipartMessage(3);
             
-            return _commandSerializer.DeserializeResult(reply[0].ToByteArray());
+            var result = _commandSerializer.DeserializeResult(reply[1].ToByteArray());
+
+            if(remoteCommand.RemoteSessionInformation.ActionId != result.RemoteSessionInformation.ActionId)
+            {
+                throw new InvalidOperationException("The reply did not match the query");
+            }
+
+            return result;
         }
 
         public static Func<IServiceProvider, Client> Factory(string endpoint)
@@ -65,6 +73,11 @@ namespace NetworkedService.Transport.NetMQ
         public ICommandSerializer GetSerializer()
         {
             return _commandSerializer;
+        }
+
+        public void Dispose()
+        {
+            _requestSocket.Dispose();
         }
     }
 }

@@ -4,6 +4,7 @@ using NetworkedService.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -90,6 +91,16 @@ namespace NetworkedService
                     Result = returnValue
                 };
 
+                var returnType = method.ReturnType;
+                if (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>))
+                {
+                    var task = ((Task)returnValue);
+                    task.Wait();
+
+                    var resultProperty = typeof(Task<>).MakeGenericType(returnType.GetGenericArguments()).GetProperty("Result");
+                    result.Result = resultProperty.GetValue(task);
+                }
+
                 return result;
             }
         }
@@ -98,19 +109,21 @@ namespace NetworkedService
         {
             var activeActions = new List<Task>();
 
-            activeActions.Add(Task.Run(() =>
+            while(true)
             {
-                while (true)
+                var remoteCommand = _remoteProcedureListener.Receive();
+                activeActions.Add(Task.Run(() =>
                 {
-                    var remoteCommand = _remoteProcedureListener.Receive();
-                    activeActions.Add(Task.Run(() =>
-                    {
-                        _remoteProcedureListener.Reply(ParseMessage(remoteCommand));
-                    }));
-                }
-            }));
+                    _remoteProcedureListener.Reply(ParseMessage(remoteCommand));
+                }));
 
-            Parallel.ForEach(activeActions, (t) => t.Wait());
+                foreach (var task in activeActions.Reverse<Task>())
+                    if (task.IsCompleted)
+                    {
+                        task.Wait();
+                        activeActions.Remove(task);
+                    }
+            }
         }
 
         public async Task ListenAsync()

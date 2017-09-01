@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkedService.Interfaces
 {
-    public interface IRemoteProcedureListener
+    public interface IRemoteProcedureListener : IDisposable
     {
         RemoteCommand Receive();
         void Reply(RemoteResult remoteResult);
