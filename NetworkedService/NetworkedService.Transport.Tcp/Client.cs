@@ -20,7 +20,6 @@ namespace NetworkedService.Transport.Tcp
 
         public Client(string hostname, int port, ICommandSerializer commandSerializer)
         {
-            _address = new IPEndPoint(address, port);
             //_requestSocket = new DealerSocket(endpoint);
             //_requestSocket.Options.Identity = _identity.ToByteArray();
             _commandSerializer = commandSerializer;
@@ -28,6 +27,8 @@ namespace NetworkedService.Transport.Tcp
             // Find the first IPv4 address
             var address = Dns.GetHostAddresses(hostname)
                 .FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
+
+            _address = new IPEndPoint(address, port);
         }
 
         public RemoteResult CallMethod(RemoteCommand remoteCommand)
@@ -36,21 +37,31 @@ namespace NetworkedService.Transport.Tcp
             client.Connect(_address);
             client.NoDelay = true;
 
-            //var msg = new NetMQMessage();
             var msg = _commandSerializer.SerializeCommand(remoteCommand);
             var stream = client.GetStream();
+
+            Console.WriteLine("Client: Transmitting {0} bytes of data", msg.Length);
 
             byte[] length = BitConverter.GetBytes(msg.Length);
             // Prepend the packet with the length of our packet
             stream.Write(length, 0, length.Length);
             stream.Write(msg, 0, msg.Length);
             stream.Flush();
-            
+
             // Read the actual packet
             stream.Read(length, 0, length.Length);
             var replyLength = BitConverter.ToInt32(length, 0);
+
+            Console.WriteLine("Client: Receiving {0} bytes of data", replyLength);
+
             var reply = new byte[replyLength];
-            stream.Read(reply, 0, replyLength);
+            int offset = 0;
+            while(offset < replyLength)
+            {
+                offset += stream.Read(reply, offset, replyLength - offset);
+                Console.WriteLine("Client: Received Bytes: {0}/{1}", offset, replyLength);
+            }
+
 
             stream.Close();
             client.Close();
@@ -86,11 +97,6 @@ namespace NetworkedService.Transport.Tcp
         public ICommandSerializer GetSerializer()
         {
             return _commandSerializer;
-        }
-
-        public void Dispose()
-        {
-            //throw new NotImplementedException();
         }
     }
 }

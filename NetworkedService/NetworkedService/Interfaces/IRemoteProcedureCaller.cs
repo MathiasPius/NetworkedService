@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NetworkedService.Interfaces
 {
-    public interface IRemoteProcedureCaller : IDisposable
+    public interface IRemoteProcedureCaller
     {
         RemoteResult CallMethod(RemoteCommand remoteCommand);
         ICommandSerializer GetSerializer();
