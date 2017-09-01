@@ -33,6 +33,17 @@ namespace NetworkedService
             _exposedInterfaces.GetOrAdd(typeof(TInterface), serviceProvider);
         }
 
+        private object ConvertParameter(object value, Type returnType)
+        {
+            if (value.GetType() == returnType)
+                return value;
+
+            if (returnType.IsEnum)
+                return Enum.Parse(returnType, value.ToString());
+
+            return Convert.ChangeType(value, returnType);
+        }
+
         public RemoteResult ParseMessage(RemoteCommand remoteCommand)
         {
             if (remoteCommand.MethodName == DestroyScope && remoteCommand.InterfaceName == null)
@@ -79,7 +90,9 @@ namespace NetworkedService
 
                 var parameters = _remoteProcedureListener
                     .GetSerializer()
-                    .ConvertParameters(remoteCommand.Parameters, parameterTypes);
+                    .ConvertParameters(remoteCommand.Parameters, parameterTypes)
+                    .Zip(parameterTypes, (o, t) => ConvertParameter(o, t))
+                    .ToArray();
 
                 // Make the call
                 Console.WriteLine("Server: Calling " + remoteCommand.InterfaceName + "::" + remoteCommand.MethodName);

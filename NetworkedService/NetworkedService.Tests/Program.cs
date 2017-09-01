@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using NetworkedService.Serialization.Xml;
-using NetworkedService.Transport.NetMQ;
+using NetworkedService.Serialization.Json;
+using NetworkedService.Transport.Tcp;
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace NetworkedService.Tests
@@ -13,12 +14,12 @@ namespace NetworkedService.Tests
         {
             // Server side
             var serverServices = new ServiceCollection();
-            serverServices.AddXmlCommandDeserializer();
+            serverServices.AddJsonCommandDeserializer();
             serverServices.AddSingleton<IMath, Math>();
 
             var serverSide = serverServices.BuildServiceProvider();
 
-            var server = new RemoteServiceHost(new Server("tcp://localhost:5555", new XmlCommandDeserializer()));
+            var server = new RemoteServiceHost(new Server(IPAddress.Loopback, 5555, new JsonCommandDeserializer()));
             server.ExposeInterface<IMath>(serverSide);
 
             server.ListenAsync();
@@ -26,8 +27,8 @@ namespace NetworkedService.Tests
             // Client side
             var clientServices = new ServiceCollection();
             clientServices.AddNetworkedScoping();
-            clientServices.AddXmlCommandSerializer();
-            clientServices.AddNetMQClient<IMath>("tcp://localhost:5555");
+            clientServices.AddJsonCommandSerializer();
+            clientServices.AddTcpClient<IMath>("localhost", 5555);
 
             var clientSide = clientServices.BuildServiceProvider();
 

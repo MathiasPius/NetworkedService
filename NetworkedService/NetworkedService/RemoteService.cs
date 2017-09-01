@@ -15,7 +15,7 @@ namespace NetworkedService
         private static Guid InstanceId = Guid.NewGuid();
         private readonly IRemoteProcedureCaller _remoteProcedureCaller;
         private readonly RemoteSessionInformation _remoteSessionInformation;
-        private readonly ConcurrentDictionary<Guid, Task> _activeActions;
+        //private readonly ConcurrentDictionary<Guid, Task> _activeActions;
         private readonly string _interfaceName;
 
         public RemoteService(INetworkedScope scope, IRemoteProcedureCaller remoteProcedurePoller, string interfaceName)

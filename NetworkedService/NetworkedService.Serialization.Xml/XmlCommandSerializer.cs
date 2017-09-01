@@ -3,6 +3,7 @@ using System.IO;
 
 using NetworkedService.Interfaces;
 using NetworkedService.Models;
+using System;
 
 namespace NetworkedService.Serialization.Xml
 {
@@ -24,6 +25,11 @@ namespace NetworkedService.Serialization.Xml
             var serializer = new XmlSerializer(typeof(RemoteResult));
 
             return (RemoteResult)serializer.Deserialize(stream);
+        }
+
+        public object ConvertResult(object result, Type resultType)
+        {
+            throw new NotImplementedException();
         }
     }
 }
