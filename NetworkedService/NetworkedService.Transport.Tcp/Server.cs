@@ -42,32 +42,17 @@ namespace NetworkedService.Transport.Tcp
 
         public RemoteCommand Receive()
         {
-            var socket = _tcpListener.AcceptTcpClient();
-            socket.NoDelay = true;
+            var client = _tcpListener.AcceptTcpClient();
+            client.NoDelay = true;
 
-            var stream = socket.GetStream();
+            var stream = client.GetStream();
+            var message = stream.ReadFullPacket();
+            var command = _commandDeserializer.DeserializeCommand(message);
 
-            // Read the incoming packet size first
-            var lengthBuffer = BitConverter.GetBytes(new Int32());
-            stream.Read(lengthBuffer, 0, lengthBuffer.Length);
-
-            var length = BitConverter.ToInt32(lengthBuffer, 0);
-            var buffer = new byte[length];
-
-            Console.WriteLine("Server: Receiving {0} bytes of data", length);
-
-            int offset = 0;
-            while (offset < length)
-            {
-                offset += stream.Read(buffer, offset, length - offset);
-                Console.WriteLine("Server: Received Bytes: {0}/{1}", offset, length);
-            }
-
-            var command = _commandDeserializer.DeserializeCommand(buffer);
-
-            _activeSessions[command.RemoteSessionInformation] = socket;
+            _activeSessions[command.RemoteSessionInformation] = client;
 
             return command;
+            
         }
 
         public void Reply(RemoteResult remoteResult)
@@ -79,13 +64,7 @@ namespace NetworkedService.Transport.Tcp
 
             Console.WriteLine("Server: Writing {0} bytes of data", reply.Length);
 
-            var stream = client.GetStream();
-            byte[] length = BitConverter.GetBytes(reply.Length);
-            // Prepend the packet with the length of our packet
-            stream.Write(length, 0, length.Length);
-            stream.Write(reply, 0, reply.Length);
-            stream.Flush();
-            stream.Close();
+            client.GetStream().WriteFullPacket(reply);
             client.Close();
         }
 

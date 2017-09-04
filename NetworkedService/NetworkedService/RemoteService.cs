@@ -10,7 +10,7 @@ using System.Collections.Concurrent;
 
 namespace NetworkedService
 {
-    public class RemoteService<TInterface> : IRemoteService, IDisposable
+    public class RemoteService<TInterface> : IRemoteService
     {
         private static Guid InstanceId = Guid.NewGuid();
         private readonly IRemoteProcedureCaller _remoteProcedureCaller;
@@ -139,11 +139,6 @@ namespace NetworkedService
         public string GetInterfaceName()
         {
             return _interfaceName;
-        }
-
-        public void Dispose()
-        {
-            _remoteProcedureCaller.Dispose();
         }
     }
 }

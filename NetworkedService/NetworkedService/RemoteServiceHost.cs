@@ -68,7 +68,6 @@ namespace NetworkedService
 
                 // Get the scope in which this action is to take place
                 var serviceScopeId = remoteCommand.RemoteSessionInformation.ScopeId;
-
                 
                 var serviceScope = _scopes.GetOrAdd(serviceScopeId, serviceProvider.CreateScope().ServiceProvider);
 
