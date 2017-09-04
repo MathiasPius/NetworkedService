@@ -40,7 +40,7 @@ namespace NetworkedService.Transport.Tcp
             while (offset < length)
             {
                 offset += stream.Read(buffer, offset, length - offset);
-                Console.WriteLine("Client: Received Bytes: {0}/{1}", offset, length);
+                //Console.WriteLine("Client: Received Bytes: {0}/{1}", offset, length);
             }
 
             return buffer;

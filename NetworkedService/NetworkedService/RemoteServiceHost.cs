@@ -41,7 +41,14 @@ namespace NetworkedService
             if (returnType.IsEnum)
                 return Enum.Parse(returnType, value.ToString());
 
-            return Convert.ChangeType(value, returnType);
+            try
+            {
+                return Convert.ChangeType(value, returnType);
+            }
+            catch(Exception)
+            {
+                return Activator.CreateInstance(returnType, value);
+            }
         }
 
         public RemoteResult ParseMessage(RemoteCommand remoteCommand)

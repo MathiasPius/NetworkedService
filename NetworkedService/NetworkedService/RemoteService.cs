@@ -60,6 +60,9 @@ namespace NetworkedService
 
         private TReturn ConvertResult<TReturn>(object value)
         {
+            if (value == null)
+                return default(TReturn);
+
             var returnType = typeof(TReturn);
 
             var converted = _remoteProcedureCaller.GetSerializer()
@@ -116,6 +119,7 @@ namespace NetworkedService
             };
 
             var result = _remoteProcedureCaller.CallMethod(remoteCommand);
+
             return ConvertResult<TReturn>(result.Result);
         }
 

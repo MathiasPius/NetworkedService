@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using NetworkedService.Interfaces;
 using NetworkedService.Models;
 using System.Linq;
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Net;
@@ -62,7 +59,7 @@ namespace NetworkedService.Transport.Tcp
 
             var reply = _commandDeserializer.SerializeResult(remoteResult);
 
-            Console.WriteLine("Server: Writing {0} bytes of data", reply.Length);
+            //Console.WriteLine("Server: Writing {0} bytes of data", reply.Length);
 
             client.GetStream().WriteFullPacket(reply);
             client.Close();

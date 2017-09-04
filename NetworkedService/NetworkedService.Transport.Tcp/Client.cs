@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 
 using NetworkedService.Interfaces;
@@ -33,22 +31,10 @@ namespace NetworkedService.Transport.Tcp
             var client = new TcpClient();
             client.NoDelay = true;
 
-            for (int i = 0; i < 10; i++)
-            {
-                try
-                {
-                    client.Connect(_address);
-                    break;
-                }
-                catch (SocketException e)
-                {
-                    if (e.SocketErrorCode != SocketError.TimedOut)
-                        throw e;
-                }
-            }
+            TcpHelper.TryConnect(client, _address);
 
             var msg = _commandSerializer.SerializeCommand(remoteCommand);
-            Console.WriteLine("Client: Transmitting {0} bytes of data", msg.Length);
+            //Console.WriteLine("Client: Transmitting {0} bytes of data", msg.Length);
 
             using (var stream = client.GetStream())
             {
