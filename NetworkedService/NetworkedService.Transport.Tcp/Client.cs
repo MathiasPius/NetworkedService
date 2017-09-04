@@ -14,14 +14,11 @@ namespace NetworkedService.Transport.Tcp
     public class Client : IRemoteProcedureCaller
     {
         private readonly Guid _identity = Guid.NewGuid();
-        //private readonly DealerSocket _requestSocket;
         private readonly ICommandSerializer _commandSerializer;
         private readonly IPEndPoint _address;
 
         public Client(string hostname, int port, ICommandSerializer commandSerializer)
         {
-            //_requestSocket = new DealerSocket(endpoint);
-            //_requestSocket.Options.Identity = _identity.ToByteArray();
             _commandSerializer = commandSerializer;
 
             // Find the first IPv4 address

@@ -124,11 +124,14 @@ namespace NetworkedService
             while(true)
             {
                 var remoteCommand = _remoteProcedureListener.Receive();
+
+                // Reply asynchronously.
                 activeActions.Add(Task.Run(() =>
                 {
                     _remoteProcedureListener.Reply(ParseMessage(remoteCommand));
                 }));
 
+                // Remove any tasks that have completed whenever we get to it
                 foreach (var task in activeActions.Reverse<Task>())
                     if (task.IsCompleted)
                     {
