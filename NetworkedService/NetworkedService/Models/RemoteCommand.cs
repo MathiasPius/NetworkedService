@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using NetworkedService.Models;
 
 namespace NetworkedService.Models
 {
@@ -8,8 +9,8 @@ namespace NetworkedService.Models
     public class RemoteCommand
     {
         public RemoteSessionInformation RemoteSessionInformation { get; set; }
-        public string InterfaceName { get; set; }
-        public string MethodName { get; set; }
+        public RemoteProcedureDescriptor RemoteProcedureDescriptor { get; set; }
+        //public InterfaceHash TargetInterface { get; set; }
         public object[] Parameters { get; set; }
     }
 

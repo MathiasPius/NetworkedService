@@ -32,8 +32,8 @@ namespace NetworkedService
         {
             Console.WriteLine("Client: Networked Scope Destroyed: " + _scopeId);
 
-            foreach (var client in _scopedClients)
-                client.ScopeDestroyed(this);
+            //foreach (var client in _scopedClients)
+                //client.ScopeDestroyed(this);
         }
     }
 }

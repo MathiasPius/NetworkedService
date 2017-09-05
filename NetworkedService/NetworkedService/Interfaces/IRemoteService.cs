@@ -7,6 +7,5 @@ namespace NetworkedService.Interfaces
     public interface IRemoteService
     {
         void ScopeDestroyed(INetworkedScope networkedScope);
-        string GetInterfaceName();
     }
 }

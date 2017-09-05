@@ -7,6 +7,7 @@ using NetworkedService.Models;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace NetworkedService
 {
@@ -15,11 +16,14 @@ namespace NetworkedService
         private static Guid InstanceId = Guid.NewGuid();
         private readonly IRemoteProcedureCaller _remoteProcedureCaller;
         private readonly RemoteSessionInformation _remoteSessionInformation;
-        //private readonly ConcurrentDictionary<Guid, Task> _activeActions;
-        private readonly string _interfaceName;
 
-        public RemoteService(INetworkedScope scope, IRemoteProcedureCaller remoteProcedurePoller, string interfaceName)
+        private readonly MethodDictionary _methodDictionary;
+
+
+        public RemoteService(INetworkedScope scope, IRemoteProcedureCaller remoteProcedurePoller, MethodDictionary methodDictionary)
         {
+            _methodDictionary = methodDictionary;
+
             _remoteSessionInformation = new RemoteSessionInformation
             {
                 InstanceId = InstanceId,
@@ -28,19 +32,14 @@ namespace NetworkedService
             };
 
             _remoteProcedureCaller = remoteProcedurePoller;
-            _interfaceName = interfaceName;
         }
 
-        public void CallVoidMethod(string methodName, params object[] parameters)
+        public void CallVoidMethod(RemoteProcedureDescriptor descriptor, params object[] parameters)
         {
-            if (methodName == "Dispose")
-            {
-                Console.WriteLine("Client: Ignoring call to {0}::Dispose()", _interfaceName);
-                return;
-            }
-
             if (_remoteProcedureCaller == null)
                 throw new InvalidOperationException();
+
+            //descriptor.InterfaceHash = _methodDictionary.GetPrimaryInterface();
 
             var remoteCommand = new RemoteCommand
             {
@@ -50,13 +49,15 @@ namespace NetworkedService
                     ScopeId = _remoteSessionInformation.ScopeId,
                     ActionId = Guid.NewGuid()
                 },
-                InterfaceName = _interfaceName,
-                MethodName = methodName,
+                RemoteProcedureDescriptor = descriptor,
                 Parameters = parameters
             };
 
             var result = _remoteProcedureCaller.CallMethod(remoteCommand);
         }
+
+        public void CallVoidMethod(string descriptor, params object[] parameters)
+            => CallVoidMethod(new RemoteProcedureDescriptor(Guid.Parse(descriptor)), parameters);
 
         private TReturn ConvertResult<TReturn>(object value)
         {
@@ -77,10 +78,12 @@ namespace NetworkedService
             return (TReturn)Convert.ChangeType(converted, typeof(TReturn));
         }
 
-        public Task<TReturn> CallAsyncMethod<TReturn>(string methodName, params object[] parameters)
+        public Task<TReturn> CallAsyncMethod<TReturn>(RemoteProcedureDescriptor descriptor, params object[] parameters)
         {
             if (_remoteProcedureCaller == null)
                 throw new InvalidOperationException();
+
+            //descriptor.InterfaceHash = _methodDictionary.GetPrimaryInterface();
 
             var remoteCommand = new RemoteCommand
             {
@@ -90,8 +93,7 @@ namespace NetworkedService
                     ScopeId = _remoteSessionInformation.ScopeId,
                     ActionId = Guid.NewGuid()
                 },
-                InterfaceName = _interfaceName,
-                MethodName = methodName,
+                RemoteProcedureDescriptor = descriptor,
                 Parameters = parameters
             };
 
@@ -100,7 +102,10 @@ namespace NetworkedService
             return Task.FromResult(ConvertResult<TReturn>(result.Result));
         }
 
-        public TReturn CallMethod<TReturn>(string methodName, params object[] parameters)
+        public Task<TReturn> CallAsyncMethod<TReturn>(string descriptor, params object[] parameters)
+            => CallAsyncMethod<TReturn>(new RemoteProcedureDescriptor(Guid.Parse(descriptor)), parameters);
+
+        public TReturn CallMethod<TReturn>(RemoteProcedureDescriptor descriptor, params object[] parameters)
         {
             if (_remoteProcedureCaller == null)
                 throw new InvalidOperationException();
@@ -113,8 +118,7 @@ namespace NetworkedService
                     ScopeId = _remoteSessionInformation.ScopeId,
                     ActionId = Guid.NewGuid()
                 },
-                InterfaceName = _interfaceName,
-                MethodName = methodName,
+                RemoteProcedureDescriptor = descriptor,
                 Parameters = parameters
             };
 
@@ -123,26 +127,12 @@ namespace NetworkedService
             return ConvertResult<TReturn>(result.Result);
         }
 
+        public TReturn CallMethod<TReturn>(string descriptor, params object[] parameters)
+            => CallMethod<TReturn>(new RemoteProcedureDescriptor(Guid.Parse(descriptor)), parameters);
+
         public void ScopeDestroyed(INetworkedScope networkedScope)
         {
-            // If this scope id doesn't belong to us, we don't give a shit
-            if (_remoteSessionInformation.ScopeId != networkedScope.GetScopeGuid())
-                return;
             
-            // Send the command
-            var result = _remoteProcedureCaller.CallMethod(new RemoteCommand
-            {
-                MethodName = RemoteServiceHost.DestroyScope,
-                RemoteSessionInformation = new RemoteSessionInformation
-                {
-                    ScopeId = networkedScope.GetScopeGuid(),
-                }
-            });
-        }
-
-        public string GetInterfaceName()
-        {
-            return _interfaceName;
         }
     }
 }

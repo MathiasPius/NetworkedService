@@ -28,7 +28,8 @@ namespace NetworkedService.Serialization.Json
 
         public RemoteCommand DeserializeCommand(byte[] rawData)
         {
-            return JsonConvert.DeserializeObject<RemoteCommand>(Encoding.UTF8.GetString(rawData));
+            var json = Encoding.UTF8.GetString(rawData);
+            return JsonConvert.DeserializeObject<RemoteCommand>(json);
         }
 
         public byte[] SerializeResult(RemoteResult remoteResult)

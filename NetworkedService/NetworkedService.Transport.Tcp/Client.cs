@@ -56,6 +56,7 @@ namespace NetworkedService.Transport.Tcp
 
         public void ScopeDestroyed(INetworkedScope networkedScope)
         {
+            /*
             // We destroy scopes by sending an "empty" RemoteCommand method to the server
             // specifying only the scope Guid to be destroyed
             var result = CallMethod(new RemoteCommand
@@ -69,6 +70,7 @@ namespace NetworkedService.Transport.Tcp
                     ActionId = Guid.Empty
                 }
             });
+            */
         }
 
         public ICommandSerializer GetSerializer()
