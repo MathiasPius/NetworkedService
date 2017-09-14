@@ -38,9 +38,9 @@ namespace NetworkedService
             return Interfaces.Last().Item2;
         }
 
-        public InterfaceHash GetPrimaryInterfaceHash()
+        public ServiceHash GetServiceHash()
         {
-            return Interfaces.Last().Item1;
+            return new ServiceHash(Interfaces.Last().Item1);
         }
 
         public IEnumerable<InterfaceHash> GetSecondaryInterfaceHashes()
@@ -50,7 +50,6 @@ namespace NetworkedService
 
         public InterfaceHash AddInterface(ServiceHash serviceHash, Type iface)
         {
-            Console.WriteLine("Hashing Interface: " + iface.FullName);
             // Hash all methods
             var methodHashes = iface.GetMethods()
                 .Select(m => new { Method = m, Hash = HashMethod(m) })
@@ -77,14 +76,9 @@ namespace NetworkedService
                 descriptor.MethodName = method.Hash.Name;
                 descriptor.MethodSignature = method.Hash.Signature;
                 
-                if(_methods.ContainsKey(descriptor.ToGuid()))
-                {
-                    Console.WriteLine(iface.Name + ":" + method.Method.Name + " already exists");
-                }
-                else
-                {
+                // We only need to add it once
+                if(!_methods.ContainsKey(descriptor.ToGuid()))
                     _methods.Add(descriptor.ToGuid(), Tuple.Create(iface, method.Method));
-                }
             }
 
             Interfaces.Add(Tuple.Create(interfaceHash, iface));
@@ -93,6 +87,9 @@ namespace NetworkedService
 
         public InterfaceHash AddInterface<TInterface>(ServiceHash serviceHash)
             => AddInterface(serviceHash, typeof(TInterface));
+
+        public InterfaceHash AddInterface<TInterface>()
+            => AddInterface(new ServiceHash(Hash(typeof(TInterface).FullName)), typeof(TInterface));
 
         private static MD5 _hasher = MD5.Create();
 

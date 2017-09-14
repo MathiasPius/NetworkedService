@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace NetworkedService
 {
-    public class RemoteService<TInterface> : IRemoteService
+    public class RemoteService<TInterface>
     {
         private static Guid InstanceId = Guid.NewGuid();
         private readonly IRemoteProcedureCaller _remoteProcedureCaller;
@@ -20,14 +20,14 @@ namespace NetworkedService
         private readonly MethodDictionary _methodDictionary;
 
 
-        public RemoteService(INetworkedScope scope, IRemoteProcedureCaller remoteProcedurePoller, MethodDictionary methodDictionary)
+        public RemoteService(IRemoteProcedureCaller remoteProcedurePoller, MethodDictionary methodDictionary)
         {
             _methodDictionary = methodDictionary;
 
             _remoteSessionInformation = new RemoteSessionInformation
             {
                 InstanceId = InstanceId,
-                ScopeId =  scope?.GetScopeGuid() ?? Guid.Empty,
+                ScopeId =  Guid.Empty,
                 ActionId = Guid.Empty
             };
 
@@ -38,8 +38,6 @@ namespace NetworkedService
         {
             if (_remoteProcedureCaller == null)
                 throw new InvalidOperationException();
-
-            //descriptor.InterfaceHash = _methodDictionary.GetPrimaryInterface();
 
             var remoteCommand = new RemoteCommand
             {
@@ -67,7 +65,7 @@ namespace NetworkedService
             var returnType = typeof(TReturn);
 
             var converted = _remoteProcedureCaller.GetSerializer()
-                .ConvertResult(value, returnType);
+                .ConvertObject(value, returnType);
 
             if(converted.GetType() == returnType)
                 return (TReturn)converted;
@@ -82,8 +80,6 @@ namespace NetworkedService
         {
             if (_remoteProcedureCaller == null)
                 throw new InvalidOperationException();
-
-            //descriptor.InterfaceHash = _methodDictionary.GetPrimaryInterface();
 
             var remoteCommand = new RemoteCommand
             {
@@ -129,10 +125,5 @@ namespace NetworkedService
 
         public TReturn CallMethod<TReturn>(string descriptor, params object[] parameters)
             => CallMethod<TReturn>(new RemoteProcedureDescriptor(Guid.Parse(descriptor)), parameters);
-
-        public void ScopeDestroyed(INetworkedScope networkedScope)
-        {
-            
-        }
     }
 }

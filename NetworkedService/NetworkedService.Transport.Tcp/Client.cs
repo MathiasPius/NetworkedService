@@ -6,16 +6,17 @@ using NetworkedService.Models;
 using System.Net.Sockets;
 using System.Net;
 using System.Linq;
+using System.Threading;
 
 namespace NetworkedService.Transport.Tcp
 {
     public class Client : IRemoteProcedureCaller
     {
         private readonly Guid _identity = Guid.NewGuid();
-        private readonly ICommandSerializer _commandSerializer;
+        private readonly IRemoteProcedureSerializer _commandSerializer;
         private readonly IPEndPoint _address;
 
-        public Client(string hostname, int port, ICommandSerializer commandSerializer)
+        public Client(string hostname, int port, IRemoteProcedureSerializer commandSerializer)
         {
             _commandSerializer = commandSerializer;
 
@@ -28,52 +29,25 @@ namespace NetworkedService.Transport.Tcp
 
         public RemoteResult CallMethod(RemoteCommand remoteCommand)
         {
-            var client = new TcpClient();
-            client.NoDelay = true;
-
-            TcpHelper.TryConnect(client, _address);
+            var client = TcpHelper.TryConnect(_address);
 
             var msg = _commandSerializer.SerializeCommand(remoteCommand);
-            //Console.WriteLine("Client: Transmitting {0} bytes of data", msg.Length);
 
-            using (var stream = client.GetStream())
-            {
-                stream.WriteFullPacket(msg);
-                var reply = stream.ReadFullPacket();
-
-                return _commandSerializer.DeserializeResult(reply);
-            }
+            client.WriteFullPacket(msg);
+            var reply = client.ReadFullPacket();
+            return _commandSerializer.DeserializeResult(reply);
         }
 
         public static Func<IServiceProvider, Client> Factory(string hostname, int port)
         {
             return (serviceProvider) =>
             {
-                var commandSerializer = serviceProvider.GetService<ICommandSerializer>();
+                var commandSerializer = serviceProvider.GetService<IRemoteProcedureSerializer>();
                 return new Client(hostname, port, commandSerializer);
             };
         }
 
-        public void ScopeDestroyed(INetworkedScope networkedScope)
-        {
-            /*
-            // We destroy scopes by sending an "empty" RemoteCommand method to the server
-            // specifying only the scope Guid to be destroyed
-            var result = CallMethod(new RemoteCommand
-            {
-                MethodName = "@DestroyScope",
-                Parameters = null,
-                RemoteSessionInformation = new RemoteSessionInformation
-                {
-                    InstanceId = Guid.Empty,
-                    ScopeId = networkedScope.GetScopeGuid(),
-                    ActionId = Guid.Empty
-                }
-            });
-            */
-        }
-
-        public ICommandSerializer GetSerializer()
+        public IRemoteProcedureSerializer GetSerializer()
         {
             return _commandSerializer;
         }

@@ -8,8 +8,7 @@ namespace NetworkedService.Interfaces
 {
     public interface IRemoteProcedureListener
     {
-        RemoteCommand Receive();
-        void Reply(RemoteResult remoteResult);
-        ICommandDeserializer GetSerializer();
+        Session Receive();
+        void Reply(SessionToken token, byte[] reply);
     }
 }

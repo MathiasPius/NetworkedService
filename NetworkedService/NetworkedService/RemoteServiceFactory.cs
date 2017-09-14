@@ -16,16 +16,13 @@ namespace NetworkedService
     {
         public static Func<IServiceProvider, TInterface> Factory(IRemoteProcedureCaller remoteProcedureCaller)
         {
+            StaticInterfaceDescriptor<TInterface>.Build();
+
             return (IServiceProvider serviceProvider) =>
             {
-
                 var type = StaticInterfaceDescriptor<TInterface>.CachedType;
                 var dictionary = StaticInterfaceDescriptor<TInterface>.MethodDictionary;
-                var scope = serviceProvider.GetService<INetworkedScope>();
-                var instance = Activator.CreateInstance(type, scope, remoteProcedureCaller, dictionary);
-
-                if (scope != null)
-                    scope.AddClient((IRemoteService)instance);
+                var instance = Activator.CreateInstance(type, remoteProcedureCaller, dictionary);
 
                 return (TInterface)instance;
             };
@@ -33,17 +30,13 @@ namespace NetworkedService
 
         public static Func<IServiceProvider, TInterface> Factory(IRemoteProcedureCaller remoteProcedureCaller, InterfaceHash interfaceHash)
         {
+            StaticInterfaceDescriptor<TInterface>.Build();
+
             return (IServiceProvider serviceProvider) =>
             {
                 var type = StaticInterfaceDescriptor<TInterface>.CachedType;
                 var dictionary = StaticInterfaceDescriptor<TInterface>.MethodDictionary;
-                //dictionary.Interfaces.Add(Tuple.Create(interfaceHash, typeof(TInterface)));
-
-                var scope = serviceProvider.GetService<INetworkedScope>();
-                var instance = Activator.CreateInstance(type, scope, remoteProcedureCaller, dictionary);
-
-                if (scope != null)
-                    scope.AddClient((IRemoteService)instance);
+                var instance = Activator.CreateInstance(type, remoteProcedureCaller, dictionary);
 
                 return (TInterface)instance;
             };
@@ -77,7 +70,7 @@ namespace NetworkedService
         static StaticInterfaceDescriptor()
         {
             MethodDictionary = new MethodDictionary();
-            MethodDictionary.AddInterface<TInterface>(new ServiceHash(Enumerable.Repeat<byte>(0, 4)));
+            MethodDictionary.AddInterface<TInterface>();
 
             var iface = typeof(TInterface);
             var ifaceName = iface.Name;
@@ -105,16 +98,15 @@ namespace NetworkedService
             var constructorBuilder = typeBuilder.DefineConstructor(
                 MethodAttributes.Public | MethodAttributes.HideBySig,
                 CallingConventions.Standard,
-                new Type[] { typeof(INetworkedScope), typeof(IRemoteProcedureCaller), typeof(MethodDictionary) }
+                new Type[] { typeof(IRemoteProcedureCaller), typeof(MethodDictionary) }
             );
 
-            constructorBuilder.DefineParameter(1, ParameterAttributes.None, "scope");
-            constructorBuilder.DefineParameter(2, ParameterAttributes.None, "remoteProcedureCaller");
-            constructorBuilder.DefineParameter(3, ParameterAttributes.None, "remoteProcedureDescriptor");
+            constructorBuilder.DefineParameter(1, ParameterAttributes.None, "remoteProcedureCaller");
+            constructorBuilder.DefineParameter(2, ParameterAttributes.None, "remoteProcedureDescriptor");
 
             var baseConstructor = baseType.GetConstructor(
                 BindingFlags.Public | BindingFlags.Instance, null,
-                new Type[] { typeof(INetworkedScope), typeof(IRemoteProcedureCaller), typeof(MethodDictionary) }, null
+                new Type[] { typeof(IRemoteProcedureCaller), typeof(MethodDictionary) }, null
             );
 
             // Tell our constructor to call the RemoteService<TInterface> constructor
@@ -122,7 +114,6 @@ namespace NetworkedService
             constructor.Emit(OpCodes.Ldarg_0);
             constructor.Emit(OpCodes.Ldarg_1);
             constructor.Emit(OpCodes.Ldarg_2);
-            constructor.Emit(OpCodes.Ldarg_3);
             constructor.Emit(OpCodes.Call, baseConstructor);
             constructor.Emit(OpCodes.Nop);
             constructor.Emit(OpCodes.Nop);
@@ -132,12 +123,14 @@ namespace NetworkedService
             var methods = iface.GetAllMethods(BindingFlags.Public | BindingFlags.Instance);
             // Implement the functions of the interface
             foreach (var method in methods)
-            {
-                Console.WriteLine("Client: Building implementation of " + method.DeclaringType.Name + ":" + method.Name);
                 AddMethodCall(typeBuilder, method);
-            }
 
             CachedType = typeBuilder.CreateType();
+        }
+
+        public static void Build()
+        {
+            // This does nothing, but ensure that the constructor has been called
         }
 
         private static void AddMethodCall(TypeBuilder typeBuilder, MethodInfo methodInfo)
@@ -168,7 +161,7 @@ namespace NetworkedService
 
             var method = methodBuilder.GetILGenerator();
             method.Emit(OpCodes.Ldarg_0);
-            // TODO: Find a way to load the binary RemotProcedureDescriptor here instead of
+            // TODO: Find a way to load the binary RemoteProcedureDescriptor here instead of
             // making it into a string first, but I can't find a good way to do that yet.
             method.Emit(OpCodes.Ldstr, MethodDictionary.FindDescriptor(methodInfo).ToGuid().ToString());
 

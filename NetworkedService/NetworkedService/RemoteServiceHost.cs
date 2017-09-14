@@ -14,28 +14,27 @@ namespace NetworkedService
 {
     public class RemoteServiceHost
     {
-        public const string DestroyScope = @"@DestroyScope";
-
-        private readonly MethodDictionary _methodDictionary;
-        private readonly ConcurrentDictionary<Guid, IServiceProvider> _scopes;
-        private readonly ConcurrentDictionary<Type, IServiceProvider> _exposedInterfaces;
+        private readonly Dictionary<ServiceHash, MethodDictionary> _methodDictionaries = new Dictionary<ServiceHash, MethodDictionary>();
+        private readonly List<Type> _exposedInterfaces = new List<Type>();
+        private readonly IServiceProvider _serviceProvider;
         private readonly IRemoteProcedureListener _remoteProcedureListener;
+        private readonly IRemoteProcedureSerializer _serializer;
 
-        public RemoteServiceHost(IRemoteProcedureListener remoteProcedureListener)
+        public RemoteServiceHost(IServiceProvider serviceProvider, IRemoteProcedureListener remoteProcedureListener, IRemoteProcedureSerializer serializer)
         {
-            _methodDictionary = new MethodDictionary();
-
-            _scopes = new ConcurrentDictionary<Guid, IServiceProvider>();
-            _exposedInterfaces = new ConcurrentDictionary<Type, IServiceProvider>();
+            _serviceProvider = serviceProvider;
             _remoteProcedureListener = remoteProcedureListener;
+            _serializer = serializer;
         }
 
-        public void ExposeInterface<TInterface>(IServiceProvider serviceProvider)
+        public void ExposeInterface<TInterface>()
             where TInterface: class
         {
-            _methodDictionary.AddInterface<TInterface>(new ServiceHash(Enumerable.Repeat<byte>(0, 4)));
+            var methods = new MethodDictionary();
+            methods.AddInterface<TInterface>();
 
-            _exposedInterfaces.GetOrAdd(typeof(TInterface), serviceProvider);
+            _methodDictionaries.Add(methods.GetServiceHash(), methods);
+            _exposedInterfaces.Add(typeof(TInterface));
         }
 
         private object ConvertParameter(object value, Type returnType)
@@ -61,46 +60,27 @@ namespace NetworkedService
 
         public RemoteResult ParseMessage(RemoteCommand remoteCommand)
         {
-            if (remoteCommand.RemoteProcedureDescriptor.ToGuid() == Guid.Empty)
-            {
-                return new RemoteResult
-                {
-                    RemoteSessionInformation = remoteCommand.RemoteSessionInformation,
-                    Result = null
-                };
-            }
+            var methods = _methodDictionaries.GetValueOrDefault(remoteCommand.RemoteProcedureDescriptor.ServiceHash);
 
             // Get the method to call on the service
-            var lookup = _methodDictionary.FindMethod(remoteCommand.RemoteProcedureDescriptor);
+            var lookup = methods.FindMethod(remoteCommand.RemoteProcedureDescriptor);
 
-            var serviceType = lookup.Item1;// _methodDictionary.GetPrimaryInterface();
+            var serviceType = methods.GetPrimaryInterface();
             var method = lookup.Item2;
 
-            if (!_exposedInterfaces.TryGetValue(lookup.Item1, out IServiceProvider serviceProvider))
-            {
-                throw new InvalidOperationException("Failed to get service provider");
-            }
-
-            // Get the scope in which this action is to take place
-            var serviceScopeId = remoteCommand.RemoteSessionInformation.ScopeId;
-            var serviceScope = _scopes.GetOrAdd(serviceScopeId, serviceProvider.CreateScope().ServiceProvider);
-
             // Get the actual service instance
-            var service = serviceScope.GetService(serviceType);
+            var service = _serviceProvider.GetService(serviceType);
 
             // Convert the parameters from the RemoteCommand into correct types
             var parameterTypes = method.GetParameters()
                 .Select(p => p.ParameterType)
                 .ToArray();
-
-            var parameters = _remoteProcedureListener
-                .GetSerializer()
-                .ConvertParameters(remoteCommand.Parameters, parameterTypes)
-                .Zip(parameterTypes, (o, t) => ConvertParameter(o, t))
+                
+            var parameters = remoteCommand.Parameters
+                .Zip(parameterTypes, (o, t) => ConvertParameter(_serializer.ConvertObject(o, t), t))
                 .ToArray();
 
             // Make the call
-            //Console.WriteLine("Server: Calling " + remoteCommand.InterfaceName + "::" + remoteCommand.MethodName);
             var returnValue = method.Invoke(service, parameters);
 
             var result = new RemoteResult
@@ -126,29 +106,14 @@ namespace NetworkedService
         {
             var activeActions = new List<Task>();
 
-            while(true)
+            while (true)
             {
-                var remoteCommand = _remoteProcedureListener.Receive();
+                var session = _remoteProcedureListener.Receive();
+                var remoteCommand = _serializer.DeserializeCommand(session.Message);
+                var result = ParseMessage(remoteCommand);
 
-                // Reply asynchronously.
-                activeActions.Add(Task.Run(() =>
-                {
-                    _remoteProcedureListener.Reply(ParseMessage(remoteCommand));
-                }));
-
-                // Remove any tasks that have completed whenever we get to it
-                foreach (var task in activeActions.Reverse<Task>())
-                    if (task.IsCompleted)
-                    {
-                        task.Wait();
-                        activeActions.Remove(task);
-                    }
+                _remoteProcedureListener.Reply(session.Token, _serializer.SerializeResult(result));
             }
-        }
-
-        public async Task ListenAsync()
-        {
-            await Task.Run(() => Listen());
         }
     }
 }

@@ -23,28 +23,29 @@ namespace NetworkedService.Models
     {
         public MethodNameHash() { }
         public MethodNameHash(IEnumerable<byte> b) : base(b) { }
-        public bool Equals(MethodNameHash other) { return base.Equals((BasicHash)other); }
+        public bool Equals(MethodNameHash other) { return base.Equals(other); }
     }
 
     public class MethodSignatureHash : BasicHash, IEquatable<MethodSignatureHash>
     {
         public MethodSignatureHash() { }
         public MethodSignatureHash(IEnumerable<byte> b) : base(b) { }
-        public bool Equals(MethodSignatureHash other) { return base.Equals((BasicHash)other); }
+        public bool Equals(MethodSignatureHash other) { return base.Equals(other); }
     }
 
     public class InterfaceHash : BasicHash, IEquatable<InterfaceHash>
     {
         public InterfaceHash() { }
         public InterfaceHash(IEnumerable<byte> b) : base(b) { }
-        public bool Equals(InterfaceHash other) { return base.Equals((BasicHash)other); }
+        public bool Equals(InterfaceHash other) { return base.Equals(other); }
     }
 
-    public class ServiceHash : BasicHash, IEquatable<ServiceHash>
+    public class ServiceHash : InterfaceHash, IEquatable<ServiceHash>
     {
         public ServiceHash() { }
-        public ServiceHash(IEnumerable<byte> b) : base(b) { }
-        public bool Equals(ServiceHash other) { return base.Equals((BasicHash)other); }
+        public ServiceHash(IEnumerable<byte> bytes) : base(bytes) { }
+        public ServiceHash(InterfaceHash interfaceHash) : base(interfaceHash.GetBytes()) { }
+        public bool Equals(ServiceHash other) { return base.Equals(other); }
     }
 
     public class MethodHash : IEquatable<MethodHash>
