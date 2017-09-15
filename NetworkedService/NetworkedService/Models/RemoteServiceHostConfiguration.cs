@@ -20,7 +20,7 @@ namespace NetworkedService.Models
             return this;
         }
 
-        public RemoteServiceHost Finish()
+        public RemoteServiceHost GetServer()
         {
             return _remoteServiceHost;
         }
