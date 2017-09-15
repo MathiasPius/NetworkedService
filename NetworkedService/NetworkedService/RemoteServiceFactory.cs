@@ -22,21 +22,8 @@ namespace NetworkedService
             {
                 var type = StaticInterfaceDescriptor<TInterface>.CachedType;
                 var dictionary = StaticInterfaceDescriptor<TInterface>.MethodDictionary;
-                var instance = Activator.CreateInstance(type, remoteProcedureCaller, dictionary);
-
-                return (TInterface)instance;
-            };
-        }
-
-        public static Func<IServiceProvider, TInterface> Factory(IRemoteProcedureCaller remoteProcedureCaller, InterfaceHash interfaceHash)
-        {
-            StaticInterfaceDescriptor<TInterface>.Build();
-
-            return (IServiceProvider serviceProvider) =>
-            {
-                var type = StaticInterfaceDescriptor<TInterface>.CachedType;
-                var dictionary = StaticInterfaceDescriptor<TInterface>.MethodDictionary;
-                var instance = Activator.CreateInstance(type, remoteProcedureCaller, dictionary);
+                var serializer = serviceProvider.GetService<IRemoteProcedureSerializer>();
+                var instance = Activator.CreateInstance(type, remoteProcedureCaller, serializer, dictionary);
 
                 return (TInterface)instance;
             };
@@ -48,15 +35,6 @@ namespace NetworkedService
             {
                 // Construct the IRPC from its own factory first, then call the TInterface constructor with the IRPC
                 return Factory(rpcFactory(serviceProvider))(serviceProvider);
-            };
-        }
-
-        public static Func<IServiceProvider, object> Factory(Func<IServiceProvider, IRemoteProcedureCaller> rpcFactory, InterfaceHash interfaceHash)
-        {
-            return (IServiceProvider serviceProvider) =>
-            {
-                // Construct the IRPC from its own factory first, then call the TInterface constructor with the IRPC
-                return Factory(rpcFactory(serviceProvider), interfaceHash)(serviceProvider);
             };
         }
     }
@@ -98,15 +76,16 @@ namespace NetworkedService
             var constructorBuilder = typeBuilder.DefineConstructor(
                 MethodAttributes.Public | MethodAttributes.HideBySig,
                 CallingConventions.Standard,
-                new Type[] { typeof(IRemoteProcedureCaller), typeof(MethodDictionary) }
+                new Type[] { typeof(IRemoteProcedureCaller), typeof(IRemoteProcedureSerializer), typeof(MethodDictionary) }
             );
 
             constructorBuilder.DefineParameter(1, ParameterAttributes.None, "remoteProcedureCaller");
-            constructorBuilder.DefineParameter(2, ParameterAttributes.None, "remoteProcedureDescriptor");
+            constructorBuilder.DefineParameter(2, ParameterAttributes.None, "remoteProcedureSerializer");
+            constructorBuilder.DefineParameter(3, ParameterAttributes.None, "remoteProcedureDescriptor");
 
             var baseConstructor = baseType.GetConstructor(
                 BindingFlags.Public | BindingFlags.Instance, null,
-                new Type[] { typeof(IRemoteProcedureCaller), typeof(MethodDictionary) }, null
+                new Type[] { typeof(IRemoteProcedureCaller), typeof(IRemoteProcedureSerializer), typeof(MethodDictionary) }, null
             );
 
             // Tell our constructor to call the RemoteService<TInterface> constructor
@@ -114,6 +93,7 @@ namespace NetworkedService
             constructor.Emit(OpCodes.Ldarg_0);
             constructor.Emit(OpCodes.Ldarg_1);
             constructor.Emit(OpCodes.Ldarg_2);
+            constructor.Emit(OpCodes.Ldarg_3);
             constructor.Emit(OpCodes.Call, baseConstructor);
             constructor.Emit(OpCodes.Nop);
             constructor.Emit(OpCodes.Nop);

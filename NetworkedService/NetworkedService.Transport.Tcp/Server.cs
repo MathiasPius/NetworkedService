@@ -14,25 +14,23 @@ namespace NetworkedService.Transport.Tcp
 {
     public class Server : IRemoteProcedureListener
     {
-        private readonly Dictionary<SessionToken, Socket> _activeSessions;
+        private readonly Dictionary<SessionToken, Socket> _activeSessions = new Dictionary<SessionToken, Socket>();
         private readonly TcpListener _tcpListener;
-        private readonly IPAddress _address;
-        private readonly int _port;
+        private readonly IPEndPoint _endpoint;
 
         public Server(string hostname, int port)
             : this(
+                  new IPEndPoint(
                   Dns.GetHostAddresses(hostname)
                     .FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork), 
                   port
-            ) { }
+            )) { }
 
-        public Server(IPAddress address, int port)
+        public Server(IPEndPoint endpoint)
         {
-            _activeSessions = new Dictionary<SessionToken, Socket>();
-            _tcpListener = new TcpListener(address, port);
-            _address = address;
-            _port = port;
+            _endpoint = endpoint;
 
+            _tcpListener = new TcpListener(endpoint);
             _tcpListener.Start();
         }
 
@@ -57,7 +55,6 @@ namespace NetworkedService.Transport.Tcp
 
             client.WriteFullPacket(reply);
             client.Close();
-
         }
     }
 }

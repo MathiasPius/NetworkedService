@@ -29,7 +29,7 @@ namespace NetworkedService.Transport.Tcp
 
         public RemoteResult CallMethod(RemoteCommand remoteCommand)
         {
-            var client = TcpHelper.TryConnect(_address);
+            var client = TryConnect(_address);
 
             var msg = _commandSerializer.SerializeCommand(remoteCommand);
 
@@ -47,9 +47,39 @@ namespace NetworkedService.Transport.Tcp
             };
         }
 
-        public IRemoteProcedureSerializer GetSerializer()
+        private Socket TryConnect(IPEndPoint endpoint, int timeoutRetry = 10)
         {
-            return _commandSerializer;
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            do
+            {
+                try
+                {
+                    if (socket.ConnectAsync(endpoint).Wait(1000))
+                        return socket;
+                }
+                catch(SocketException)
+                {
+                    --timeoutRetry;
+                    Thread.Sleep(500);
+                }
+                catch (AggregateException ae)
+                {
+                    ae.Handle(x =>
+                    {
+                        if (x is SocketException)
+                        {
+                            --timeoutRetry;
+                            Thread.Sleep(500);
+                            return true;
+                        }
+
+                        return false;
+                    });
+                }
+            } while (timeoutRetry >= 0);
+
+            return socket;
         }
     }
 }

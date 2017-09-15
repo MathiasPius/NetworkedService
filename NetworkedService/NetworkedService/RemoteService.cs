@@ -15,13 +15,14 @@ namespace NetworkedService
     {
         private static Guid InstanceId = Guid.NewGuid();
         private readonly IRemoteProcedureCaller _remoteProcedureCaller;
+        private readonly IRemoteProcedureSerializer _remoteProcedureSerializer;
         private readonly RemoteSessionInformation _remoteSessionInformation;
 
         private readonly MethodDictionary _methodDictionary;
 
-
-        public RemoteService(IRemoteProcedureCaller remoteProcedurePoller, MethodDictionary methodDictionary)
+        public RemoteService(IRemoteProcedureCaller remoteProcedureCaller, IRemoteProcedureSerializer remoteProcedureSerializer, MethodDictionary methodDictionary)
         {
+            _remoteProcedureSerializer = remoteProcedureSerializer;
             _methodDictionary = methodDictionary;
 
             _remoteSessionInformation = new RemoteSessionInformation
@@ -31,7 +32,7 @@ namespace NetworkedService
                 ActionId = Guid.Empty
             };
 
-            _remoteProcedureCaller = remoteProcedurePoller;
+            _remoteProcedureCaller = remoteProcedureCaller;
         }
 
         public void CallVoidMethod(RemoteProcedureDescriptor descriptor, params object[] parameters)
@@ -64,7 +65,7 @@ namespace NetworkedService
 
             var returnType = typeof(TReturn);
 
-            var converted = _remoteProcedureCaller.GetSerializer()
+            var converted = _remoteProcedureSerializer
                 .ConvertObject(value, returnType);
 
             if(converted.GetType() == returnType)
