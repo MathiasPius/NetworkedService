@@ -74,6 +74,9 @@ namespace NetworkedService
             if (returnType.IsEnum)
                 return (TReturn)Enum.Parse(returnType, converted.ToString());
 
+            if (returnType.IsAssignableFrom(converted.GetType()))
+                return (TReturn)converted;
+
             return (TReturn)Convert.ChangeType(converted, typeof(TReturn));
         }
 
