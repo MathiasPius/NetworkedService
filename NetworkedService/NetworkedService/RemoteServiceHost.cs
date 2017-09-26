@@ -80,26 +80,43 @@ namespace NetworkedService
                 .Zip(parameterTypes, (o, t) => ConvertParameter(_serializer.ConvertObject(o, t), t))
                 .ToArray();
 
-            // Make the call
-            var returnValue = method.Invoke(service, parameters);
-
-            var result = new RemoteResult
+            try
             {
-                RemoteSessionInformation = remoteCommand.RemoteSessionInformation,
-                Result = returnValue
-            };
+                var returnValue = method.Invoke(service, parameters);
+                // Make the call
 
-            var returnType = method.ReturnType;
-            if (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>))
+                var result = new RemoteResult
+                {
+                    RemoteSessionInformation = remoteCommand.RemoteSessionInformation,
+                    Result = returnValue
+                };
+
+                var returnType = method.ReturnType;
+                if (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>))
+                {
+                    var task = ((Task)returnValue);
+                    task.Wait();
+
+                    var resultProperty = typeof(Task<>).MakeGenericType(returnType.GetGenericArguments()).GetProperty("Result");
+                    result.Result = resultProperty.GetValue(task);
+                }
+
+                return result;
+            } catch(TargetInvocationException e)
             {
-                var task = ((Task)returnValue);
-                task.Wait();
-
-                var resultProperty = typeof(Task<>).MakeGenericType(returnType.GetGenericArguments()).GetProperty("Result");
-                result.Result = resultProperty.GetValue(task);
+                return new RemoteResult
+                {
+                    RemoteSessionInformation = remoteCommand.RemoteSessionInformation,
+                    Exception = e.InnerException
+                };
+            } catch(Exception e)
+            {
+                return new RemoteResult
+                {
+                    RemoteSessionInformation = remoteCommand.RemoteSessionInformation,
+                    Exception = e
+                };
             }
-
-            return result;
         }
 
         public void Listen()

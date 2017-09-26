@@ -18,6 +18,7 @@ namespace NetworkedService.Models
     public class RemoteResult
     {
         public RemoteSessionInformation RemoteSessionInformation { get; set; }
+        public object Exception { get; set; }
         public object Result { get; set; }
     }
 }

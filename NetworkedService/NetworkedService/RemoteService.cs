@@ -53,6 +53,10 @@ namespace NetworkedService
             };
 
             var result = _remoteProcedureCaller.CallMethod(remoteCommand);
+            if(result.Exception != null)
+            {
+                throw new RemoteException("Remote Service threw an exception", ConvertResult<Exception>(result.Exception));
+            }
         }
 
         public void CallVoidMethod(string descriptor, params object[] parameters)
@@ -124,7 +128,14 @@ namespace NetworkedService
 
             var result = _remoteProcedureCaller.CallMethod(remoteCommand);
 
-            return ConvertResult<TReturn>(result.Result);
+            if (result.Exception != null)
+            {
+                throw new RemoteException("Remote Service threw an exception", ConvertResult<Exception>(result.Exception));
+            }
+            else
+            {
+                return ConvertResult<TReturn>(result.Result);
+            }
         }
 
         public TReturn CallMethod<TReturn>(string descriptor, params object[] parameters)
