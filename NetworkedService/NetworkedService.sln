@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService", "Network
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transport", "Transport", "{1027B0D3-B7C0-4B32-902B-2750D372CEB5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService.Tests", "NetworkedService.Tests\NetworkedService.Tests.csproj", "{21B1FA29-53D5-4225-A9C3-2BF4D453B192}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serialization", "Serialization", "{109C067A-655E-428E-9145-9E52EA2B97B3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService.Serialization.Json", "NetworkedService.Serialization.Json\NetworkedService.Serialization.Json.csproj", "{229F5336-7B5C-4667-A797-FDA322145B41}"
@@ -27,10 +25,6 @@ Global
 		{F64C1F1B-5253-4ABD-A352-09E10D9C6333}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F64C1F1B-5253-4ABD-A352-09E10D9C6333}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F64C1F1B-5253-4ABD-A352-09E10D9C6333}.Release|Any CPU.Build.0 = Release|Any CPU
-		{21B1FA29-53D5-4225-A9C3-2BF4D453B192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{21B1FA29-53D5-4225-A9C3-2BF4D453B192}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{21B1FA29-53D5-4225-A9C3-2BF4D453B192}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{21B1FA29-53D5-4225-A9C3-2BF4D453B192}.Release|Any CPU.Build.0 = Release|Any CPU
 		{229F5336-7B5C-4667-A797-FDA322145B41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{229F5336-7B5C-4667-A797-FDA322145B41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{229F5336-7B5C-4667-A797-FDA322145B41}.Release|Any CPU.ActiveCfg = Release|Any CPU
