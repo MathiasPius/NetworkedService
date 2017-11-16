@@ -10,17 +10,22 @@ namespace NetworkedService.Tests
 {
     class Program
     {
+
         static void Main(string[] args)
         {
+            /*
             // Server side
             var serverServices = new ServiceCollection();
-            serverServices.AddJsonCommandDeserializer();
+            serverServices.AddJsonCommandSerializer();
             serverServices.AddSingleton<IMath, Math>();
 
+            serverServices.
+            
             var serverSide = serverServices.BuildServiceProvider();
+            serverSide.UseRemoteServiceHost();
 
             var server = new RemoteServiceHost(new Server(IPAddress.Loopback, 5555, new JsonCommandDeserializer()));
-            server.ExposeInterface<IMath>(serverSide);
+            serverSide.ExposeInterface<IMath>(serverSide);
 
             server.ListenAsync();
 
@@ -54,6 +59,7 @@ namespace NetworkedService.Tests
                     client.Noop(val);
                 }
             }
+                    */
         }
     }
 }

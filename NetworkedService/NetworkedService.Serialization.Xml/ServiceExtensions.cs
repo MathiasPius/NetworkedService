@@ -6,12 +6,7 @@ namespace NetworkedService.Serialization.Xml
     {
         public static void AddXmlCommandSerializer(this IServiceCollection serviceCollection)
         {
-            serviceCollection.AddCommandSerializer<XmlCommandSerializer>();
-        }
-
-        public static void AddXmlCommandDeserializer(this IServiceCollection serviceCollection)
-        {
-            serviceCollection.AddCommandDeserializer<XmlCommandDeserializer>();
+            serviceCollection.AddCommandSerializer<XmlTranslator>();
         }
     }
 }

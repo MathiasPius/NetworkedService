@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26823.1
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService", "NetworkedService\NetworkedService.csproj", "{F64C1F1B-5253-4ABD-A352-09E10D9C6333}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transport", "Transport", "{1027B0D3-B7C0-4B32-902B-2750D372CEB5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService.Transport.NetMQ", "NetworkedService.Transport.NetMQ\NetworkedService.Transport.NetMQ.csproj", "{193B7409-E824-40C1-8C90-B7A26A590B43}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService.Tests", "NetworkedService.Tests\NetworkedService.Tests.csproj", "{21B1FA29-53D5-4225-A9C3-2BF4D453B192}"
 EndProject
@@ -17,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService.Serializat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService.Serialization.Xml", "NetworkedService.Serialization.Xml\NetworkedService.Serialization.Xml.csproj", "{8813EB64-B880-4172-9AFD-A041F160AE26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkedService.Transport.Tcp", "NetworkedService.Transport.Tcp\NetworkedService.Transport.Tcp.csproj", "{0CAF4BF4-47B5-4A2A-A993-FF96BE97FF62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkedService.Transport.Tcp", "NetworkedService.Transport.Tcp\NetworkedService.Transport.Tcp.csproj", "{0CAF4BF4-47B5-4A2A-A993-FF96BE97FF62}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +27,6 @@ Global
 		{F64C1F1B-5253-4ABD-A352-09E10D9C6333}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F64C1F1B-5253-4ABD-A352-09E10D9C6333}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F64C1F1B-5253-4ABD-A352-09E10D9C6333}.Release|Any CPU.Build.0 = Release|Any CPU
-		{193B7409-E824-40C1-8C90-B7A26A590B43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{193B7409-E824-40C1-8C90-B7A26A590B43}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{193B7409-E824-40C1-8C90-B7A26A590B43}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{193B7409-E824-40C1-8C90-B7A26A590B43}.Release|Any CPU.Build.0 = Release|Any CPU
 		{21B1FA29-53D5-4225-A9C3-2BF4D453B192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{21B1FA29-53D5-4225-A9C3-2BF4D453B192}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21B1FA29-53D5-4225-A9C3-2BF4D453B192}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -54,7 +48,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{193B7409-E824-40C1-8C90-B7A26A590B43} = {1027B0D3-B7C0-4B32-902B-2750D372CEB5}
 		{229F5336-7B5C-4667-A797-FDA322145B41} = {109C067A-655E-428E-9145-9E52EA2B97B3}
 		{8813EB64-B880-4172-9AFD-A041F160AE26} = {109C067A-655E-428E-9145-9E52EA2B97B3}
 		{0CAF4BF4-47B5-4A2A-A993-FF96BE97FF62} = {1027B0D3-B7C0-4B32-902B-2750D372CEB5}
