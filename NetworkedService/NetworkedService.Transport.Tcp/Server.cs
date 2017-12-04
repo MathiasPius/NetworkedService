@@ -18,14 +18,6 @@ namespace NetworkedService.Transport.Tcp
         private readonly TcpListener _tcpListener;
         private readonly IPEndPoint _endpoint;
 
-        public Server(string hostname, int port)
-            : this(
-                  new IPEndPoint(
-                  Dns.GetHostAddresses(hostname)
-                    .FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork), 
-                  port
-            )) { }
-
         public Server(IPEndPoint endpoint)
         {
             _endpoint = endpoint;
