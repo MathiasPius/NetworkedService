@@ -15,6 +15,7 @@ namespace NetworkedService.Transport.Tcp
         private readonly Guid _identity = Guid.NewGuid();
         private readonly IRemoteProcedureSerializer _commandSerializer;
         private readonly IPEndPoint _address;
+        private readonly string _hostname;
 
         public Client(string hostname, int port, IRemoteProcedureSerializer commandSerializer)
         {
@@ -25,6 +26,7 @@ namespace NetworkedService.Transport.Tcp
                 .FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
 
             _address = new IPEndPoint(address, port);
+            _hostname = hostname;
         }
 
         public RemoteResult CallMethod(RemoteCommand remoteCommand)
@@ -40,7 +42,7 @@ namespace NetworkedService.Transport.Tcp
                 return _commandSerializer.DeserializeResult(reply);
             } catch(SocketException se)
             {
-                throw new InvalidOperationException(string.Format("Failed to call remote method on {0}:{1}", _address.Address.ToString(), _address.Port), se);
+                throw new InvalidOperationException(string.Format("Failed to call remote method on {0}: {1}:{2}", _hostname, _address.Address.ToString(), _address.Port), se);
             }
         }
 
