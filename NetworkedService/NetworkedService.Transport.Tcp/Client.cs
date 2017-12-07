@@ -29,13 +29,19 @@ namespace NetworkedService.Transport.Tcp
 
         public RemoteResult CallMethod(RemoteCommand remoteCommand)
         {
-            var client = TryConnect(_address);
+            try
+            {
+                var client = TryConnect(_address);
 
-            var msg = _commandSerializer.SerializeCommand(remoteCommand);
+                var msg = _commandSerializer.SerializeCommand(remoteCommand);
 
-            client.WriteFullPacket(msg);
-            var reply = client.ReadFullPacket();
-            return _commandSerializer.DeserializeResult(reply);
+                client.WriteFullPacket(msg);
+                var reply = client.ReadFullPacket();
+                return _commandSerializer.DeserializeResult(reply);
+            } catch(SocketException se)
+            {
+                throw new InvalidOperationException(string.Format("Failed to call remote method on {0}:{1}", _address.Address.ToString(), _address.Port), se);
+            }
         }
 
         public static Func<IServiceProvider, Client> Factory(string hostname, int port)
