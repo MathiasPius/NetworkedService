@@ -39,6 +39,10 @@ namespace NetworkedService.Transport.Tcp
 
                 client.WriteFullPacket(msg);
                 var reply = client.ReadFullPacket();
+
+                if(reply == null)
+                    throw new InvalidOperationException("Reply message contained invalid signature");
+
                 return _commandSerializer.DeserializeResult(reply);
             } catch(SocketException se)
             {

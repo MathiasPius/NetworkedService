@@ -126,10 +126,17 @@ namespace NetworkedService
             while (true)
             {
                 var session = _remoteProcedureListener.Receive();
-                var remoteCommand = _serializer.DeserializeCommand(session.Message);
-                var result = ParseMessage(remoteCommand);
+                if(session == null)
+                {
+                    Console.WriteLine("Recieved invalid message, ignoring");
+                }
+                else
+                {
+                    var remoteCommand = _serializer.DeserializeCommand(session.Message);
+                    var result = ParseMessage(remoteCommand);
 
-                _remoteProcedureListener.Reply(session.Token, _serializer.SerializeResult(result));
+                    _remoteProcedureListener.Reply(session.Token, _serializer.SerializeResult(result));
+                }
             }
         }
     }

@@ -37,6 +37,12 @@ namespace NetworkedService.Transport.Tcp
                 Message = socket.ReadFullPacket()
             };
 
+            if(session.Message == null)
+            {
+                socket.Close();
+                return null;
+            }
+
             _activeSessions[session.Token] = socket;
             return session;
         }
